@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pixel Hideaway</title>
+<style>:root{--foreground:#e7dcc4;--font-size-base:14px}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#203c41}body{display:grid;place-items:center}#pixel-hideaway{max-width:1440px}button{font:inherit;background:#203c41cc;color:#e7dcc4;border:0;border-radius:4px;padding:9px 12px}button:focus-visible{outline:2px solid #e7dcc4;outline-offset:2px}</style></head><body>
+<div id="pixel-hideaway">
+  <canvas width="480" height="300" role="img" aria-label="An animated pixel-art hideaway: a little woodland cabin, a waterfall, a shimmering lake, drifting clouds, and fireflies at sunset."></canvas>
+  <div class="sound-place"><button class="btn btn-ghost" type="button" aria-pressed="false" aria-label="Turn on gentle ambient music">Sound off</button></div>
+</div>
+<style>
+#pixel-hideaway{position:relative;width:100%;color:var(--foreground)}
+#pixel-hideaway canvas{display:block;width:100%;height:auto;aspect-ratio:8/5;image-rendering:pixelated;image-rendering:crisp-edges}
+#pixel-hideaway .sound-place{position:absolute;bottom:calc(var(--font-size-base,14px)*.7);right:calc(var(--font-size-base,14px)*.7)}
+</style>
+<script>
+(()=>{
+const root=document.getElementById('pixel-hideaway');
+const canvas=root.querySelector('canvas'), c=canvas.getContext('2d',{alpha:false});
+const W=480,H=300,TAU=Math.PI*2;
+c.imageSmoothingEnabled=false;
+let ctx=c;
+const r=(x,y,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))};
+function poly(points,color){
+ const lo=Math.ceil(Math.min(...points.map(p=>p[1]))),hi=Math.floor(Math.max(...points.map(p=>p[1])));
+ for(let y=lo;y<=hi;y++){
+  const xs=[];
+  for(let i=0;i<points.length;i++){let a=points[i],b=points[(i+1)%points.length];if((a[1]<=y&&b[1]>y)||(b[1]<=y&&a[1]>y))xs.push(a[0]+(y-a[1])/(b[1]-a[1])*(b[0]-a[0]));}
+  xs.sort((a,b)=>a-b);for(let i=0;i<xs.length;i+=2)r(Math.ceil(xs[i]),y,Math.max(1,Math.floor(xs[i+1])-Math.ceil(xs[i])+1),1,color);
+ }
+}
+function disk(x,y,rad,color){for(let dy=-rad;dy<=rad;dy++){const dx=Math.floor(Math.sqrt(rad*rad-dy*dy));r(x-dx,y+dy,dx*2+1,1,color)}}
+function line(x1,y1,x2,y2,color){const n=Math.max(Math.abs(x2-x1),Math.abs(y2-y1));for(let j=0;j<=n;j++)r(x1+(x2-x1)*j/n,y1+(y2-y1)*j/n,1,1,color)}
+const hash=n=>{const a=Math.sin(n*127.1+311.7)*43758.5453;return a-Math.floor(a)};
+function blend(a,b,t){const x=a.match(/\w\w/g).map(v=>parseInt(v,16)),y=b.match(/\w\w/g).map(v=>parseInt(v,16));return '#'+x.map((v,i)=>Math.round(v+(y[i]-v)*t).toString(16).padStart(2,'0')).join('')}
+function layer(){const v=document.createElement('canvas');v.width=W;v.height=H;return v}
+function pine(x,base,h,seed,palette){
+ const top=base-h;
+ r(x-1,top+10,3,h-10,palette[0]);
+ for(let k=0;k<10;k++){
+  let yy=top+5+k*h*.078,spread=2+k*h*.023;
+  poly([[x,yy-6],[x-spread*.54,yy],[x-spread-2,yy+7],[x-2,yy+5],[x+spread+2,yy+7],[x+spread*.55,yy]],palette[1]);
+  poly([[x,yy-5],[x-spread*.65,yy+2],[x-1,yy+1],[x+spread*.58,yy+5],[x+spread+1,yy+6],[x+2,yy]],palette[2]);
+  for(let j=0;j<7;j++){const px=x+(hash(seed+k*17+j)-.5)*spread*1.7,py=yy+hash(seed+k*7+j+50)*5;r(px,py,1+hash(j+seed)*2,1,palette[3]);}
+ }
+ r(x,base-7,1,7,palette[0]);
+}
+const sky=layer();ctx=sky.getContext('2d');
+for(let y=0;y<177;y++){
+ const col=y<97?blend('8499b1','e7b7b2',y/97):blend('e7b7b2','f5d8aa',(y-97)/80);
+ r(0,y,W,1,col);
+ if(y%3===0)for(let x=(y%2)*2;x<W;x+=4)r(x,y,1,1,blend(col.slice(1),'edd1be',.12));
+}
+disk(151,65,23,'#e5b6ad');disk(151,65,19,'#f6d5aa');disk(151,65,16,'#ffe5b6');
+for(let i=0;i<17;i++)r(137+hash(i)*28,53+hash(i+50)*23,1,1,'#ffe9c0');
+
+const land=layer();ctx=land.getContext('2d');
+poly([[0,132],[24,112],[44,118],[69,92],[86,103],[113,81],[136,90],[170,72],[199,56],[222,77],[244,64],[278,39],[300,68],[317,61],[350,92],[373,84],[408,111],[440,108],[480,130],[480,181],[0,181]],'#aaa5b0');
+poly([[136,108],[170,72],[199,56],[190,79],[178,87],[180,94],[166,94]],'#c9b8bd');
+poly([[225,104],[244,64],[278,39],[267,62],[266,72],[250,78],[252,87]],'#d1c2c3');
+poly([[248,76],[278,39],[288,55],[278,53],[270,62],[267,58],[259,73]],'#eee0d3');
+poly([[177,81],[199,56],[213,69],[201,66],[193,76],[189,73]],'#e9d4cb');
+poly([[265,97],[291,69],[312,84],[332,74],[355,100],[374,91],[397,117],[423,104],[450,132],[480,124],[480,183],[0,183],[0,146],[22,129],[55,142],[83,119],[110,135],[135,112],[160,134],[190,108],[215,118],[243,92]],'#7d91a1');
+poly([[0,148],[36,135],[61,153],[97,132],[126,148],[149,133],[177,151],[206,137],[239,148],[269,130],[293,141],[324,122],[352,137],[380,120],[408,132],[435,120],[480,143],[480,182],[0,182]],'#637e8c');
+// Sparse stone textures break the large mountain facets into hand-placed pixels.
+const mountainPixels=ctx.getImageData(0,0,W,H).data;
+for(let i=0;i<1800;i++){
+ const x=Math.floor(hash(i+933)*480),y=Math.floor(42+hash(i+145)*113),at=(y*480+x)*4;
+ if(mountainPixels[at+3]&&mountainPixels[at]>110){
+  const hex=[0,1,2].map(k=>mountainPixels[at+k].toString(16).padStart(2,'0')).join('');
+  r(x,y,1+i%2,1,blend(hex,i%3?'dbccca':'788999',i%3?.11:.12));
+ }
+}
+for(let i=0;i<130;i++){
+ const x=i*4+hash(i+1)*3,base=170+hash(i+100)*6,h=12+hash(i+260)*28;
+ pine(x,base,h,i,['#496977','#4d7280','#577e87','#648b8e']);
+}
+poly([[0,155],[28,147],[55,151],[77,145],[96,154],[116,157],[138,169],[169,177],[0,191]],'#355f62');
+poly([[280,179],[311,170],[324,157],[345,153],[366,148],[387,151],[417,146],[441,155],[480,149],[480,193]],'#31585a');
+for(let i=0;i<32;i++){
+ const x=294+i*6,base=164+hash(i+3)*8,h=25+hash(i+56)*38;
+ pine(x,base,h,i+10,['#2c4c52','#335c5b','#426f64','#5d8671']);
+}
+for(let i=0;i<25;i++){
+ const x=i*5.6,base=156+hash(i+89)*14,h=26+hash(i+22)*43;
+ pine(x,base,h,i+100,['#29464e','#315652','#43725f','#6b8b69']);
+}
+// A stone ledge and a ribbon of water spilling into the lake.
+poly([[70,147],[93,142],[111,149],[112,161],[128,175],[118,183],[81,176]],'#546b67');
+poly([[80,151],[96,145],[104,150],[101,158],[116,170],[102,175],[88,165]],'#6c8071');
+poly([[97,150],[103,150],[105,161],[113,179],[102,179],[100,167]],'#b7d4c5');
+poly([[100,151],[103,153],[106,167],[109,177],[104,180],[101,164]],'#d9e4cc');
+for(let i=0;i<14;i++)r(79+hash(i)*47,165+hash(i+30)*16,3,2,['#364d50','#657a69','#93a386'][i%3]);
+// Grass and stone details on the far bank.
+for(let i=0;i<650;i++){
+ const x=hash(i+810)*480, y=164+hash(i+413)*16;
+ if(x<113-y*.0||x>299){r(x,y,1+hash(i+18)*3,1,['#416758','#5a7b61','#78916a','#a6a67b','#2b514e'][i%5]);}
+}
+// Cabin: asymmetric roof, cedar siding, stone footing, and amber windows.
+poly([[329,169],[342,165],[403,165],[411,172],[407,178],[331,178]],'#455a54');
+for(let i=0;i<18;i++)r(331+hash(i+19)*75,170+hash(i+2)*7,4,2,['#81907b','#a4a38a','#52685d'][i%3]);
+poly([[345,134],[370,119],[397,140],[397,170],[345,170]],'#806e55');
+poly([[370,119],[399,136],[408,169],[397,170],[390,143]],'#5c5c4d');
+for(let y=144;y<169;y+=4){r(345,y,49,1,'#a28a63');r(345,y+1,48,1,'#6f654f');r(397,y,7,1,'#73705a')}
+r(366,150,11,20,'#414e45');r(369,152,6,17,'#6d735a');r(374,160,1,1,'#e6bc75');
+function windowpane(x,y,w,h){r(x-1,y-1,w+2,h+2,'#3b4c45');r(x,y,w,h,'#cc9a61');r(x+1,y+1,w-2,h-2,'#f3cb83');r(x+2,y+2,2,h-4,'#ffe4a0');r(x+Math.floor(w/2),y,1,h,'#735c45');r(x,y+Math.floor(h/2),w,1,'#735c45');r(x-2,y+h+1,w+4,2,'#b49a72')}
+windowpane(350,150,10,12);windowpane(382,149,10,12);windowpane(363,133,10,9);
+poly([[336,145],[367,108],[375,108],[411,145],[401,145],[370,118],[344,145]],'#293f42');
+poly([[340,143],[369,111],[373,111],[407,143],[403,144],[370,117],[345,144]],'#53645a');
+for(let k=0;k<8;k++){
+ const y=119+k*3,span=(y-110)*.88;
+ line(370-span,y,370,y-3,'#78806a');line(373,y-3,373+span,y,'#66705d');
+ for(let j=0;j<3;j++)r(373+span*(j+1)/4,y-1,2,1,'#899078');
+}
+r(389,111,7,17,'#777865');r(388,110,9,3,'#354b48');r(390,115,2,2,'#a3a18a');r(393,121,2,2,'#4f6358');
+r(342,170,59,3,'#9c9470');r(338,173,66,2,'#5b6e5b');
+// A little wood stack; nothing electric reaches this place.
+r(404,160,12,10,'#314d47');for(let i=0;i<9;i++){disk(406+i%3*4,162+Math.floor(i/3)*3,1,'#bba376');r(405+i%3*4,162+Math.floor(i/3)*3,1,1,'#817358')}
+pine(435,174,99,701,['#203b42','#284d4d','#37645a','#628473']);
+pine(466,180,127,717,['#1c3540','#23494a','#335d53','#527964']);
+pine(24,183,106,743,['#203d43','#284f4c','#3e6c58','#698966']);
+pine(-2,187,126,712,['#1d343d','#244b47','#355f4f','#557b5b']);
+
+// Keep all scenery in true low-resolution pixel coordinates.
+const foreground=layer();ctx=foreground.getContext('2d');
+poly([[0,214],[18,221],[34,235],[63,246],[81,255],[118,267],[142,278],[168,300],[0,300]],'#294b48');
+poly([[480,218],[463,225],[450,238],[432,245],[415,262],[387,272],[361,300],[480,300]],'#254742');
+poly([[0,251],[30,245],[58,264],[82,266],[108,279],[134,300],[0,300]],'#33594d');
+poly([[480,247],[457,245],[439,261],[415,269],[390,288],[385,300],[480,300]],'#35574b');
+for(let i=0;i<2400;i++){
+ let x=hash(i+1480)*480,y=219+hash(i+2080)*81;
+ const edgeL=18+(y-219)*1.75,edgeR=470-(y-219)*1.19;
+ if(x<edgeL-12||x>edgeR+8){r(x,y,1+hash(i+4)*3,1,['#41674e','#567853','#749366','#243f3f','#3e624c','#496b50'][i%6]);}
+}
+// Stepping stones and flowers are deliberately small, quiet details.
+for(let i=0;i<16;i++){
+ const x=hash(i+87)*104,y=260+hash(i+94)*39;
+ poly([[x,y],[x+4,y-2],[x+9,y],[x+7,y+3],[x+1,y+3]],'#6b7f68');r(x+2,y,5,1,'#a0a083');
+}
+const grass=[];
+for(let i=0;i<180;i++){
+ const x=hash(i+427)*480,y=236+hash(i+682)*64;
+ if(x<18+(y-219)*1.55||x>480-(y-219)*1.1)grass.push({x:Math.round(x),y:Math.round(y),h:3+Math.floor(hash(i+73)*8),n:i});
+}
+// A tiny dock projects out from the grass; individual boards catch the last sun.
+poly([[430,235],[425,241],[368,230],[370,225]],'#273e3f');
+poly([[429,231],[425,236],[367,226],[373,222]],'#a6926b');
+for(let i=0;i<11;i++){let x=372+i*5,y=223+i*.78;line(x,y,x-3,y+5,'#645f4e');r(x,y,3,1,'#d0b58a')}
+r(371,228,2,13,'#344c45');r(418,236,2,10,'#344c45');r(370,226,4,2,'#b6a27b');
+
+ctx=c;
+const clouds=[{x:34,y:38,w:55},{x:200,y:27,w:47},{x:298,y:55,w:62},{x:389,y:23,w:42}];
+function cloud(x,y,w,shade){
+ r(x,y,w,2,shade);r(x+5,y-3,w-12,3,shade);r(x+12,y-5,w-30,2,shade);r(x+7,y+2,w-7,1,shade);
+ r(x+13,y-4,w-30,1,'#e4c4c4');r(x+1,y+3,w-4,1,'#bcaebc');
+}
+function render(t){
+ t=((t%12)+12)%12;
+ const ph=t/12*TAU, frame=Math.floor(t*10);
+ ctx=c;ctx.globalAlpha=1;ctx.drawImage(sky,0,0);
+ clouds.forEach((cl,i)=>cloud(Math.round(cl.x+Math.sin(ph+i)*4),cl.y,cl.w,i%2?'#d7b9bd':'#ccb4bf'));
+ ctx.drawImage(land,0,0);
+ // The lake reflects the actual mountain, forest, and little cabin, row by row.
+ r(0,179,480,121,'#4f7b84');
+ for(let y=179;y<300;y++){
+  const depth=(y-179)/121,sourceY=Math.max(0,177-Math.floor((y-179)*.91));
+  const offset=Math.round(Math.sin(y*.58-ph*3)*(1+depth*2)+Math.sin(y*.19+ph*2));
+  ctx.drawImage(sky,0,sourceY,480,1,offset,y,480,1);
+  ctx.drawImage(land,0,sourceY,480,1,offset,y,480,1);
+  ctx.globalAlpha=.40+depth*.13;r(0,y,480,1,depth>.65?'#345e68':'#537e85');ctx.globalAlpha=1;
+ }
+ // Dithered sun trail and long, irregular ripples.
+ for(let i=0;i<112;i++){
+  const yy=184+Math.floor(hash(i+300)*106),depth=(yy-180)/110;
+  const center=151+Math.sin(yy*.08+ph*2)*2,xx=center+(hash(i+14)-.5)*(9+depth*78);
+  if(hash(i+40)<.36+.24*Math.sin(ph*2+i))r(xx,yy,2+hash(i+18)*6,1,['#d3bb97','#b0b5a1','#e3c79d'][i%3]);
+ }
+ for(let i=0;i<180;i++){
+  const xx=hash(i+44)*480,yy=182+hash(i+114)*116;
+  const shift=Math.round(Math.sin(ph*2+i)*2);
+  r(xx+shift,yy,2+hash(i+314)*10,1,['#426b75','#658f94','#6d9394','#3e6670'][i%4]);
+ }
+ for(let i=0;i<21;i++){
+  const yy=181+i*2,x=383+Math.sin(i*1.7-ph*3)*(2+i*.12);
+  if(i%3!==frame%3)r(x,yy,2+hash(i)*4,1,i%2?'#c2a16e':'#e1b67b');
+ }
+ // Falling water is redrawn in little descending pixel streaks.
+ for(let k=0;k<19;k++){
+  const q=(k*7+frame*2)%30,yy=151+q,xx=100+Math.floor(q*.25)+Math.round(Math.sin(k)*1.5);
+  r(xx,yy,1,2+k%3,k%3?'#e3e7d3':'#9fc2bd');
+ }
+ for(let k=0;k<9;k++)r(100+k*2,180+((k+frame)%3),2,1,k%2?'#b7cec4':'#8cafa9');
+ // Wisps lift from the chimney, widening and dissolving as they rise.
+ for(let i=0;i<6;i++){
+  const a=((t/3+i/6)%1),x=392+Math.sin(a*5+ph)*3+a*5,y=110-a*24;
+  ctx.globalAlpha=(1-a)*.39;
+  r(x,y,3+Math.floor(a*5),2,'#dad6c9');r(x-1,y-1,3+Math.floor(a*4),1,'#dad6c9');
+ }
+ ctx.globalAlpha=1;
+ // Low mist slides along the shore without obscuring the artwork.
+ for(let i=0;i<6;i++){
+  ctx.globalAlpha=.13;r(122+i*30+Math.round(Math.sin(ph+i)*5),176+i%3,25,1,'#c7d5bd');
+ }ctx.globalAlpha=1;
+ // A pair of distant birds quietly crosses the clearing.
+ const birdX=-28+(t%12)*45;
+ for(let k=0;k<2;k++){
+  const x=birdX-k*13,y=73+Math.round(Math.sin(ph)*3)+k*5,wing=Math.sin(ph*12+k)>0?-1:1;
+  if(x>124&&x<343){r(x,y,1,1,'#6a7687');r(x-2,y+wing,2,1,'#6a7687');r(x+1,y+wing,2,1,'#6a7687')}
+ }
+ ctx.drawImage(foreground,0,0);
+ // Grass, clover, and small wildflowers sway one pixel at a time.
+ for(const g of grass){
+  const sway=Math.round(Math.sin(ph*2+g.x*.03)*1.3),color=['#64885c','#8c9d6a','#527654'][g.n%3];
+  line(g.x,g.y,g.x+sway-1,g.y-g.h,color);
+  if(g.n%5===0){const x=g.x+sway-1,y=g.y-g.h;r(x-1,y,3,1,g.n%2?'#e4c394':'#b8adcc');r(x,y-1,1,3,g.n%2?'#e4c394':'#b8adcc');r(x,y,1,1,'#f6d99c')}
+ }
+ // A few fireflies, at the cool edge of evening.
+ for(let i=0;i<9;i++){
+  const side=i%2?1:0,x=(side?395:46)+hash(i+34)*43+Math.sin(ph+i*2)*7,y=227+hash(i+99)*49+Math.cos(ph*2+i)*4;
+  const glow=Math.sin(ph*2+i*1.9);
+  if(glow>.15){ctx.globalAlpha=(glow-.15)*.14;r(x-1,y-1,3,3,'#d3d391');ctx.globalAlpha=.45+glow*.4;r(x,y,1,1,'#f1d995');ctx.globalAlpha=1}
+ }
+ // Foreground boughs frame the open sky, with a barely perceptible breeze.
+ const sway=Math.round(Math.sin(ph)*1);
+ poly([[0,0],[125,0],[110,6],[86,8],[73,17],[49,19],[26,33],[0,44]],'#203c41');
+ for(let i=0;i<38;i++){
+  const x=hash(i+70)*114+sway,y=hash(i+111)*22;
+  if(x/6+y<31){r(x,y,7+hash(i)*6,3,'#2f5149');r(x+2,y+3,5,2,'#42664e');r(x+3,y-1,3,1,'#648362')}
+ }
+}
+window.pixelHideaway={draw:render,canvas,duration:12};
+let origin=performance.now(),last=-1;
+const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+function tick(now){const t=((now-origin)/1000)%12,frame=Math.floor(t*12);if(frame!==last&&!document.hidden){render(reduced.matches?0:t);last=frame;}requestAnimationFrame(tick)}
+render(0);if(!new URLSearchParams(location.search).has('capture'))requestAnimationFrame(tick);
+
+// Quiet original pentatonic ambience, synthesized locally after an explicit tap.
+const button=root.querySelector('button');let audio=null,master=null,timer=null,step=0;
+function note(freq,when,length,volume,pan){
+ const gain=audio.createGain(),panner=audio.createStereoPanner();panner.pan.value=pan;
+ gain.gain.setValueAtTime(0,when);gain.gain.linearRampToValueAtTime(volume,when+.09);gain.gain.exponentialRampToValueAtTime(.0001,when+length);
+ gain.connect(panner);panner.connect(master);
+ for(const [multiple,level] of [[1,1],[2,.16],[3,.035]]){
+  const osc=audio.createOscillator(),partial=audio.createGain();osc.type='sine';osc.frequency.value=freq*multiple;partial.gain.value=level;osc.connect(partial);partial.connect(gain);osc.start(when);osc.stop(when+length+.1);
+ }
+}
+function schedule(){const notes=[293.665,440,587.33,369.994,329.628,440,246.942,369.994];note(notes[step%notes.length],audio.currentTime+.05,5,.12,Math.sin(step)*.3);if(step%3===0){note(146.832,audio.currentTime+.05,7,.035,-.25);note(220,audio.currentTime+.05,7,.027,.25);}step++;}
+button.addEventListener('click',async()=>{
+ try{
+  if(!audio){audio=new (window.AudioContext||window.webkitAudioContext)();master=audio.createGain();master.gain.value=.44;const filter=audio.createBiquadFilter();filter.type='lowpass';filter.frequency.value=1500;master.connect(filter);filter.connect(audio.destination);}
+  if(button.getAttribute('aria-pressed')==='true'){clearInterval(timer);await audio.suspend();button.setAttribute('aria-pressed','false');button.textContent='Sound off';button.setAttribute('aria-label','Turn on gentle ambient music');}
+  else{await audio.resume();schedule();timer=setInterval(schedule,3100);button.setAttribute('aria-pressed','true');button.textContent='Sound on';button.setAttribute('aria-label','Turn off ambient music');}
+ }catch{button.textContent='Sound unavailable';button.disabled=true;}
+});
+})();
+</script>
+
+</body></html>

@@ -1,0 +1,16 @@
+{
+  "name": "pixel-hideaway",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A peaceful, offline pixel-art cabin and lake with optional ambient music.",
+  "scripts": {
+    "check:preview": "node scripts/pixel.cjs --preview",
+    "export:gif": "node scripts/pixel.cjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "playwright": "^1.65.1"
+  }
+}

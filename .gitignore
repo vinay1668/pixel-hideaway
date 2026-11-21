@@ -1,0 +1,28 @@
+# Publish only the maintained animation and its reproducible export tooling.
+/*
+!/.gitignore
+!/README.md
+!/index.html
+!/package.json
+!/package-lock.json
+!/scripts/
+/scripts/*
+!/scripts/pixel.cjs
+!/output/
+/output/*
+!/output/pixel-hideaway.gif
+
+# Keep local configuration, credentials, caches, and dependencies private.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+.DS_Store
+node_modules/
+.codex/
+.agents/
+.aws/
+playwright-report/
+test-results/
